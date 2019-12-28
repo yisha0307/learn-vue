@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>MVVM DEMO</title>
+</head>
+<body>
+    <div id='mvvm-app'>
+        <input type='text' v-model='child.someStr'>
+        <p>{{child.someStr}}</p>
+        <p v-html='htmlStr'></p>
+        <button v-on:click='sayHi'>change model</button>
+    </div>
+    <!-- observer: 能够对数据对象的所有属性进行监听，如有变动可拿到最新值并通知订阅者 -->
+    <script src="./js/observer.js"></script>
+    <!-- watcher: observer和compile的桥梁， 能够订阅并收到每个属性变动的通知，执行指令绑定的相应回调函数 -->
+    <script src="./js/watcher.js"></script>
+    <!-- compile: 通过解析模板，为每个指令绑定watcher -->
+    <script src="./js/compile.js"></script>
+    <!-- 入口函数 -->
+    <script src="./js/mvvm.js"></script>
+    <script>
+    var vm = new MVVM({
+        el: '#mvvm-app',
+        data: {
+            child: {
+                someStr: 'hello world!'
+            },
+            htmlStr: '<span style="color: #f00;">red</span>'
+        },
+        methods: {
+            sayHi: function () {
+                this.child.someStr = 'hello everyone!'
+            }
+        }
+    })
+    </script> 
+</body>
+</html>
