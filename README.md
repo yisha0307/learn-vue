@@ -10,7 +10,7 @@
 
 [Vue的双向绑定原理（已完成）](./docs/1.Vue的双向绑定原理.MarkDown)
 
-[说说vue中的Virtual DOM](./docs/2.Virtual-DOM的实现.MarkDown)
+[说说vue中的Virtual DOM（已完成）](./docs/2.说说vue中Virtual-DOM.MarkDown)
 
 [Vue中的异步更新策略](./docs/3.Vue中的异步更新策略.MarkDown)
 
