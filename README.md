@@ -12,7 +12,7 @@
 
 [说说vue中的Virtual DOM（已完成）](./docs/2.说说vue中Virtual-DOM.MarkDown)
 
-[Vue中的异步更新策略](./docs/3.Vue中的异步更新策略.MarkDown)
+[Vue中的异步更新策略（已完成）](./docs/3.Vue中的异步更新策略.MarkDown)
 
 [Vuex的实现理解](./docs/4.Vuex的实现理解.MarkDown)
 
