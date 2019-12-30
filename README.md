@@ -8,19 +8,19 @@
 
 ## 目录
 
-[Vue的双向绑定原理（已完成）](./docs/1.Vue的双向绑定原理.MarkDown)
+[Vue的双向绑定原理（已完成）](./docs/Vue的双向绑定原理.MarkDown)
 
-[说说vue中的Virtual DOM（已完成）](./docs/2.说说vue中Virtual-DOM.MarkDown)
+[说说vue中的Virtual DOM（已完成）](./docs/说说vue中Virtual-DOM.MarkDown)
 
 [React diff和Vue diff实现差别](./docs/React-diff和Vue-diff实现差异.MarkDown)
 
-[Vue中的异步更新策略（已完成）](./docs/3.Vue中的异步更新策略.MarkDown)
+[Vue中的异步更新策略（已完成）](./docs/Vue中的异步更新策略.MarkDown)
 
-[Vuex的实现理解](./docs/4.Vuex的实现理解.MarkDown)
+[Vuex的实现理解](./docs/Vuex的实现理解.MarkDown)
 
-[Typescript学习笔记（持续更新ing）](./docs/5.Typescript学习笔记.MarkDown)
+[Typescript学习笔记（持续更新ing）](./docs/Typescript学习笔记.MarkDown)
 
-[Vue源码中闭包的使用（已完成）](./docs/6.Vue源码中闭包的使用.MarkDown)
+[Vue源码中闭包的使用（已完成）](./docs/Vue源码中闭包的使用.MarkDown)
 
 ## 声明
 
