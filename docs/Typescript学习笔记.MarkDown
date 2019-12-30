@@ -149,9 +149,87 @@ class Set implements ISet {
 
 ## 泛型
 
-举个源码中的例子(因为vue2里泛型几乎没用到，这边举的例子是vue3的，来自尤大的vue-next工程)：
+举个源码中的例子(因为vue2里泛型几乎没用到，这边举的例子是vue3的，来自尤大的[vue-next](https://github.com/vuejs/vue-next)工程)：
 ```javascript
 function last<T>(xs: T[]): T | undefined {
   return xs[xs.length - 1]
 }
 ```
+这个方法的意思就是传入一个数组（但是数组的每个值并不清楚是什么类型），返回该数组的最后一个值。
+
+这样我们就有个概念了，所谓泛型（Generics），是指在定义函数、接口或类的时候，不预先指定具体的类型，而在使用的时候再指定类型的一种特性。
+
+上例中，我们在函数名后添加了`<T>`，其中`T`用来指代任意输入的类型，在后面的输入`(xs: T[])`和输出T或者undefined即可使用了。接着在调用的时候，可以指定它具体的类型为 string。类型自动就会推算出来T的类型。
+
+再来一段高级点的代码，同样出自vue3：
+```javascript
+export function withScopeId(id: string): <T extends Function>(fn: T) => T {
+  if (__BUNDLER__) {
+    return ((fn: Function) => {
+      return function(this: any) {
+        pushScopeId(id)
+        const res = fn.apply(this, arguments)
+        popScopeId()
+        return res
+      }
+    }) as any
+  } else {
+    return undefined as any
+  }
+}
+```
+这段代码同样使用了泛型，但是对泛型进行了约束，只允许传进来的fn继承自Function。当然也可以自定义interface, 比如(例子来自[typescript入门教程 - 泛型](https://ts.xcatliu.com/advanced/generics)):
+```javascript
+interface Lengthwise {
+  length: number
+}
+function loggingIdentity<T extends Lengthwise> (arg: T): T {
+  console.log(arg.length)
+  return arg
+}
+```
+这就保证了泛型T必须符合interface Lengthwise的形状，也就是会有length属性。
+
+## 零零碎碎
+
+##### 数组的不同表示方法
+1. `let fibonacci: number [] = [1, 1, 2, 3, 5]`
+2. `let fibonacci: Array<number> = [1, 1, 2, 3, 5]`
+
+##### 元组和数组的不同
+数组合并了相同类型的对象，而元组（Tuple）合并了不同类型的对象。也就是数组里的每一个值都必须是同一个数据类型，但是元组无所谓.
+
+比如:
+```javascript
+// 数组
+let tom: number[] = [1, '2'] // error
+
+// 元组
+let tom: [number, string] = [1, '2'] // passed
+```
+
+##### 断言
+断言有两种语法，分别是`<类型>值`或者`值 as 类型`。在tsx中，只能使用后一种。
+比如vue3中：
+```javascript
+export function provide<T>(key: InjectionKey<T> | string, value: T) {
+  if (!currentInstance) {
+    if (__DEV__) {
+      warn(`provide() can only be used inside setup().`)
+    }
+  } else {
+    let provides = currentInstance.provides
+    const parentProvides =
+      currentInstance.parent && currentInstance.parent.provides
+    if (parentProvides === provides) {
+      provides = currentInstance.provides = Object.create(parentProvides)
+    }
+    // TS doesn't allow symbol as index type
+    provides[key as string] = value
+  }
+}
+```
+断言适用于确实需要在还不确定类型的时候就访问其中一个类型的属性或方法，比如上例中，`key as string`就是讲key断言成了string类型。之后key就可以按照string类型使用string的一些方法。
+
+要注意的是，**类型断言不是类型转换，断言成一个联合类型中不存在的类型是不允许的**。
+
