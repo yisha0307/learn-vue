@@ -192,11 +192,11 @@ function loggingIdentity<T extends Lengthwise> (arg: T): T {
 
 ## 零零碎碎
 
-##### 数组的不同表示方法
+#### 数组的不同表示方法
 1. `let fibonacci: number [] = [1, 1, 2, 3, 5]`
 2. `let fibonacci: Array<number> = [1, 1, 2, 3, 5]`
 
-##### 元组和数组的不同
+#### 元组和数组的不同
 数组合并了相同类型的对象，而元组（Tuple）合并了不同类型的对象。也就是数组里的每一个值都必须是同一个数据类型，但是元组无所谓.
 
 比如:
@@ -208,7 +208,7 @@ let tom: number[] = [1, '2'] // error
 let tom: [number, string] = [1, '2'] // passed
 ```
 
-##### 断言
+#### 断言
 断言有两种语法，分别是`<类型>值`或者`值 as 类型`。在tsx中，只能使用后一种。
 比如vue3中：
 ```javascript
