@@ -16,7 +16,7 @@
 
 [Vue中的异步更新策略（已完成）](./docs/Vue中的异步更新策略.MarkDown)
 
-[Vuex的实现理解](./docs/Vuex的实现理解.MarkDown)
+[Vuex的实现理解（已完成）](./docs/Vuex的实现理解.MarkDown)
 
 [Typescript学习笔记（持续更新ing）](./docs/Typescript学习笔记.MarkDown)
 

@@ -312,7 +312,7 @@ function resetStoreVM (store, state, hot) {
   }
 }
 ```
-在这段代码中, 其实是利用了vue.js可以对数据进行双向绑定的特点(具体参见[Vue的双向绑定原理（已完成）](./Vue的双向绑定原理.MarkDown))，new了一个vue的实例，并且绑定了state和computed, 这样就可以实现data和视图的同步更新。
+在这段代码中, 其实是利用了vue.js可以对数据进行双向绑定的特点(具体参见[Vue的双向绑定原理](./Vue的双向绑定原理.MarkDown))，new了一个vue的实例，并且绑定了state和computed, 这样就可以实现data和视图的同步更新。
 
 继续看下Vuex.store里还有什么：
 ```javascript
@@ -329,7 +329,8 @@ function resetStoreVM (store, state, hot) {
   ```
   get没什么可说的，就是返回这个state里的值，但是set这边除了一个断言就没有了，意思是state里的数据并不能直接修改，必须用mutation。
 
-## Store提供的Api
+## Commit && Dispatch
+再看一下store里提供的比较重要的两个api —— commit 和dispatch。
 ```javascript
   commit (_type, _payload, _options) {
     // unifyObjectStyle主要是统一参数的格式
@@ -389,7 +390,7 @@ function enableStrictMode (store) {
   }, { deep: true, sync: true })
 }
 ```
-调用的vue的wactch方法，在有变动的时候做一个检验，如果_committing不是true, 就扔出error。
+调用的vue的watch方法，在有变动的时候做一个检验，如果_committing不是true, 就扔出error。
 
 继续看给actions调用的dispatch方法:
 ```javascript
@@ -417,3 +418,139 @@ function enableStrictMode (store) {
   }
 ```
 `dispatch`这个方法比较简单，使用了Promise.all, 所以可以执行异步操作。
+
+但是我们在实际操作mutation和action的时候，是可以获取到state和调用commit的，这是怎么做到的呢？看一下`registerMutation`和`registerAction`两个方法。
+```javascript
+/* 遍历注册mutation */
+function registerMutation (store, type, handler, local) {
+  /* 所有的mutation会被push进一个数组中，这样相同的mutation就可以调用不同module中的同名的mutation了 */
+  const entry = store._mutations[type] || (store._mutations[type] = [])
+  entry.push(function wrappedMutationHandler (payload) {
+    handler.call(store, local.state, payload)
+  })
+}
+
+/* 遍历注册action */
+function registerAction (store, type, handler, local) {
+  /* 取出type对应的action */
+  const entry = store._actions[type] || (store._actions[type] = [])
+  entry.push(function wrappedActionHandler (payload, cb) {
+    let res = handler.call(store, {
+      dispatch: local.dispatch,
+      commit: local.commit,
+      getters: local.getters,
+      state: local.state,
+      rootGetters: store.getters,
+      rootState: store.state
+    }, payload, cb)
+    /* 判断是否是Promise */
+    if (!isPromise(res)) {
+      /* 不是Promise对象的时候转化称Promise对象 */
+      res = Promise.resolve(res)
+    }
+    if (store._devtoolHook) {
+      /* 存在devtool捕获的时候触发vuex的error给devtool */
+      return res.catch(err => {
+        store._devtoolHook.emit('vuex:error', err)
+        throw err
+      })
+    } else {
+      return res
+    }
+  })
+}
+```
+可以看到，在`registerMutation`里，push进mutationHandler的时候，会塞进local.state, 而在`registerAction`里，push进actionHandler的时候，第一个参数会包装成dispatch/commit/getters/state...的对象，这样在action里就可以去调用这些属性和方法。
+
+于是，我们就可以这样使用mutation和action：
+```javascript
+// vuex里定义mutation：
+increment (state, payload) {
+    state.count += payload.amount
+}
+
+// vuex里定义action: (使用解构)
+actionB ({ dispatch, commit }) {
+  return dispatch('actionA').then(() => {
+    commit('someOtherMutation')
+  })
+}
+```
+## store提供的其他api
+最后一口气把store里的代码都看完吧：
+```javascript
+/* 观察一个getter方法 */
+  watch (getter, cb, options) {
+    if (process.env.NODE_ENV !== 'production') {
+      assert(typeof getter === 'function', `store.watch only accepts a function.`)
+    }
+    return this._watcherVM.$watch(() => getter(this.state, this.getters), cb, options)
+  }
+
+  /* 重置state */
+  replaceState (state) {
+    this._withCommit(() => {
+      this._vm._data.$$state = state
+    })
+  }
+```
+- watch这个方法比较有趣的点在于，_watcherVM在store的构造函数里被定义成new Vue(), 因此可以直接采用vue的$watch去监听getter里的值的变化。
+- replaceState就比较简单，替换了state的根状态。
+
+```javascript
+  /* 注册一个动态module，当业务进行异步加载的时候，可以通过该接口进行注册动态module */
+  registerModule (path, rawModule) {
+    /* 转化称Array */
+    if (typeof path === 'string') path = [path]
+
+    if (process.env.NODE_ENV !== 'production') {
+      assert(Array.isArray(path), `module path must be a string or an Array.`)
+      assert(path.length > 0, 'cannot register the root module by using registerModule.')
+    }
+
+    /*注册*/
+    this._modules.register(path, rawModule)
+    /*初始化module*/
+    installModule(this, this.state, path, this._modules.get(path))
+    // reset store to update getters...
+    /* 通过vm重设store，新建Vue对象使用Vue内部的响应式实现注册state以及computed */
+    resetStoreVM(this, this.state)
+  }
+
+  /* 注销一个动态module */
+  unregisterModule (path) {
+    /* 转化称Array */
+    if (typeof path === 'string') path = [path]
+
+    if (process.env.NODE_ENV !== 'production') {
+      assert(Array.isArray(path), `module path must be a string or an Array.`)
+    }
+
+    /*注销*/
+    this._modules.unregister(path)
+    this._withCommit(() => {
+      /* 获取父级的state */
+      const parentState = getNestedState(this.state, path.slice(0, -1))
+      /* 从父级中删除 */
+      Vue.delete(parentState, path[path.length - 1])
+    })
+    /* 重制store */
+    resetStore(this)
+  }
+```
+先看一下`registerModule`这个api的调用方式：
+```javascript
+// 注册myModule
+store.registerModule('myModule', {
+  // ...
+})
+// 注册嵌套模块 `nested/myModule`
+store.registerModule(['nested', 'myModule'], {
+  // ...
+})
+```
+所以，在调用`registerModule`的时候，因为可以传string和array，所以在一开始要统一成array；之后再调用`installModule`和`resetStoreVM`这两个Vuex.store里最重要的方法，初始化module并重设store。
+
+而`unregisterModule`的作用就是注销掉一个动态模块。调用的方式就是`unregisterModule(path: string | Array<string>)`，在内部首先和`registerModule`一样，把string统一成array, 如果不是这两种数据结构的参数，就抛错出来~之后在moudles里unregister这个path, 通过commit的方式把该module里的state注销掉，同时重置store。
+
+store的代码基本就讲完啦，可以看到，vuex的代码其实很多都是高度依赖vue自身支持双向绑定的特性，比如store构造函数里的`resetStoreVM()`, 就是new了一个Vue的实例，运用vue内部的响应式注册了state和computed；再比如，store提供的api-`watch`也是使用的vm.$watch。因此，vuex只能和vue搭配使用，不能做其他框架的状态管理。
