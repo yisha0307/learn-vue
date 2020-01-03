@@ -124,7 +124,7 @@ const store = new Vuex.Store({
   }
 })
 ```
-因此，store其实是用来注册modules里的state/mutations/getters/actions。来看一下Store的代码(因为store构造类的源码很多，会一部分一部分讲)：
+因此，初始化store实例的时候就注册了modules里的state/mutations/getters/actions。来看一下Store的代码(因为store构造类的源码很多，会一部分一部分讲)：
 ```javascript
 /*Store构造类*/
 export class Store {
